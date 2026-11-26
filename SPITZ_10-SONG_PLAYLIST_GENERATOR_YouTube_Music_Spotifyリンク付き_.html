@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPITZ 10-SONG PLAYLIST GENERATOR（スピッツ ランダム10曲プレイリスト）</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts (Inter & Noto Sans JP) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', '"Inter"', 'sans-serif'],
+            display: ['"Inter"', '"Noto Sans JP"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-50 via-[#f8fcfb] to-emerald-50 text-slate-800 flex flex-col justify-between selection:bg-sky-200 selection:text-sky-900">
+
+  <!-- 背景の爽やかなグラデーション装飾 -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    <div class="absolute -top-28 -left-24 w-96 h-96 bg-sky-200/45 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-28 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-28 left-1/4 w-96 h-80 bg-cyan-100/50 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <main class="w-full max-w-3xl mx-auto px-4 py-8 sm:py-12 flex-grow flex flex-col items-center">
+
+    <!-- ヘッダーセクション -->
+    <header class="text-center w-full mb-7 sm:mb-9">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/85 backdrop-blur-xs border border-sky-200/80 text-xs font-display font-bold tracking-widest text-sky-600 uppercase shadow-2xs mb-3.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        All-Time Discography Setlist Maker
+      </div>
+
+      <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-slate-800 leading-tight">
+        <span class="bg-gradient-to-r from-sky-600 via-cyan-600 to-emerald-500 bg-clip-text text-transparent font-display">
+          SPITZ 10-SONG PLAYLIST GENERATOR
+        </span>
+        <span class="block text-base sm:text-xl font-bold text-slate-600 mt-1.5">
+          （スピッツ ランダム10曲プレイリスト）
+        </span>
+      </h1>
+
+      <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mt-3 max-w-xl mx-auto">
+        オリジナルアルバム全17作・スペシャルアルバム・シングル曲など、スピッツの歴代アーカイブから重複なしで10曲を選曲。気になる曲はその場で YouTube Music / Spotify からすぐ聴けます。
+      </p>
+
+      <!-- 収録曲数ステータスバッジ -->
+      <div class="mt-4 inline-flex items-center gap-2 bg-white/90 border border-emerald-200/80 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 shadow-2xs">
+        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+        </svg>
+        <span>収録データベース：<strong id="totalSongCount" class="font-display text-sky-700 text-base mx-0.5">0</strong> 曲からランダム選曲</span>
+      </div>
+    </header>
+
+    <!-- メインアクションボタン -->
+    <section class="w-full max-w-md mb-8">
+      <button
+        id="generateBtn"
+        type="button"
+        onclick="generatePlaylist()"
+        class="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 text-white font-bold py-4 px-6 shadow-lg shadow-sky-500/25 border-2 border-white/70 hover:brightness-105 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-3 cursor-pointer"
+      >
+        <svg class="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <span class="text-base sm:text-lg font-black tracking-wide">10曲プレイリストを作成する</span>
+      </button>
+    </section>
+
+    <!-- プレイリスト表示カード -->
+    <section id="playlistCard" class="w-full bg-white/95 backdrop-blur-sm border border-sky-200/80 rounded-3xl shadow-xl shadow-sky-900/5 overflow-hidden">
+
+      <!-- プレイリスト上部バー -->
+      <div class="bg-gradient-to-r from-sky-50 via-white to-emerald-50 border-b border-sky-100 px-5 sm:px-7 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-sky-500 to-emerald-400"></span>
+          <div>
+            <h2 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">
+              TODAY'S SPITZ SETLIST
+            </h2>
+            <p class="text-[11px] sm:text-xs text-slate-500 font-medium">
+              10 Tracks • Shuffle Mix（重複なし）
+            </p>
+          </div>
+        </div>
+
+        <span id="generatedTimestamp" class="text-[11px] font-display font-semibold text-sky-700 bg-sky-100/70 px-3 py-1 rounded-full self-start sm:self-auto">
+          READY TO PLAY
+        </span>
+      </div>
+
+      <!-- トラックリスト（01〜10曲） -->
+      <div id="trackListContainer" class="divide-y divide-slate-100">
+        <!-- JavaScriptで10曲分の行を動的に描画 -->
+      </div>
+
+      <!-- 下部アクションバー（コピー & Xポスト） -->
+      <div class="bg-slate-50/90 border-t border-slate-100 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <!-- コピーボタン -->
+        <button
+          id="copyBtn"
+          type="button"
+          onclick="copySetlist()"
+          class="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200 hover:border-sky-300 font-bold text-xs sm:text-sm shadow-2xs active:scale-[0.98] transition-all cursor-pointer"
+        >
+          <svg id="copyIcon" class="w-4 h-4 text-sky-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          <span id="copyBtnText">セットリストをコピー</span>
+        </button>
+
+        <!-- X（Twitter）ポストボタン -->
+        <a
+          id="tweetBtn"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-sm active:scale-[0.98] transition-all"
+        >
+          <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+          </svg>
+          <span>結果をXでポスト</span>
+        </a>
+      </div>
+
+    </section>
+
+    <!-- コピー完了トースト通知（alertの代替） -->
+    <div
+      id="toastNotification"
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-200 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-bold"
+    >
+      <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs">✓</span>
+      <span id="toastMessage">セットリストをコピーしました！</span>
+    </div>
+
+  </main>
+
+  <!-- フッター -->
+  <footer class="w-full border-t border-sky-200/60 bg-white/60 backdrop-blur-xs py-5 px-4 text-center text-xs text-slate-500">
+    <p>SPITZ 10-SONG PLAYLIST GENERATOR — Fan-Made Setlist Tool</p>
+  </footer>
+
+  <script>
+    /**
+     * スピッツ（SPITZ）全楽曲データベース（260曲以上収録）
+     * 形式: { title: "曲名", source: "主な収録アルバム・リリース情報" }
+     */
+    const SPITZ_SONGS = [
+      // 1st Album『スピッツ』(1991)
+      { title: "ニノウデの世界", source: "1st『スピッツ』" },
+      { title: "海とピンク", source: "1st『スピッツ』" },
+      { title: "ビー玉", source: "1st『スピッツ』" },
+      { title: "五千光年の夢", source: "1st『スピッツ』" },
+      { title: "月に帰る", source: "1st『スピッツ』" },
+      { title: "テレビ", source: "1st『スピッツ』" },
+      { title: "タンポポ", source: "1st『スピッツ』" },
+      { title: "死神の岬へ", source: "1st『スピッツ』" },
+      { title: "トンビ飛べなかった", source: "1st『スピッツ』" },
+      { title: "夏の魔物", source: "1st『スピッツ』" },
+      { title: "うめぼし", source: "1st『スピッツ』" },
+      { title: "ヒバリのこころ", source: "1st『スピッツ』" },
+
+      // 2nd Album『名前をつけてやる』(1991)
+      { title: "ウサギのバイク", source: "2nd『名前をつけてやる』" },
+      { title: "日曜日", source: "2nd『名前をつけてやる』" },
+      { title: "名前をつけてやる", source: "2nd『名前をつけてやる』" },
+      { title: "鈴虫を飼う", source: "2nd『名前をつけてやる』" },
+      { title: "ミーコとギター", source: "2nd『名前をつけてやる』" },
+      { title: "プール", source: "2nd『名前をつけてやる』" },
+      { title: "胸に咲いた黄色い花", source: "2nd『名前をつけてやる』" },
+      { title: "待ちあわせ", source: "2nd『名前をつけてやる』" },
+      { title: "あわ", source: "2nd『名前をつけてやる』" },
+      { title: "恋のうた", source: "2nd『名前をつけてやる』" },
+      { title: "魔女旅に出る", source: "2nd『名前をつけてやる』" },
+
+      // Mini Album『オーロラになれなかった人のために』(1992)
+      { title: "魔法", source: "Mini『オーロラになれなかった人のために』" },
+      { title: "田舎の生活", source: "Mini『オーロラになれなかった人のために』" },
+      { title: "ナイフ", source: "Mini『オーロラになれなかった人のために』" },
+      { title: "海ねこ", source: "Mini『オーロラになれなかった人のために』" },
+      { title: "涙", source: "Mini『オーロラになれなかった人のために』" },
+
+      // 3rd Album『惑星のかけら』(1992)
+      { title: "惑星のかけら", source: "3rd『惑星のかけら』" },
+      { title: "ハニーハニー", source: "3rd『惑星のかけら』" },
+      { title: "僕の天使マリ", source: "3rd『惑星のかけら』" },
+      { title: "オーバードライブ", source: "3rd『惑星のかけら』" },
+      { title: "アパート", source: "3rd『惑星のかけら』" },
+      { title: "シュラフ", source: "3rd『惑星のかけら』" },
+      { title: "白い炎", source: "3rd『惑星のかけら』" },
+      { title: "波のり", source: "3rd『惑星のかけら』" },
+      { title: "日なたの窓に憧れて", source: "3rd『惑星のかけら』" },
+      { title: "ローランダー、空へ", source: "3rd『惑星のかけら』" },
+      { title: "リコシェ号", source: "3rd『惑星のかけら』" },
+
+      // 4th Album『Crispy!』(1993)
+      { title: "クリスピー", source: "4th『Crispy!』" },
+      { title: "夏が終わる", source: "4th『Crispy!』" },
+      { title: "裸のままで", source: "4th『Crispy!』" },
+      { title: "君が思い出になる前に", source: "4th『Crispy!』" },
+      { title: "ドルフィン・ラヴ", source: "4th『Crispy!』" },
+      { title: "夢じゃない", source: "4th『Crispy!』" },
+      { title: "君だけを", source: "4th『Crispy!』" },
+      { title: "タイムトラベラー", source: "4th『Crispy!』" },
+      { title: "多摩川", source: "4th『Crispy!』" },
+      { title: "黒い翼", source: "4th『Crispy!』" },
+
+      // 5th Album『空の飛び方』(1994)
+      { title: "たまご", source: "5th『空の飛び方』" },
+      { title: "スパイダー", source: "5th『空の飛び方』" },
+      { title: "空も飛べるはず", source: "5th『空の飛び方』" },
+      { title: "迷子の兵隊", source: "5th『空の飛び方』" },
+      { title: "恋は夕暮れ", source: "5th『空の飛び方』" },
+      { title: "不死身のビーナス", source: "5th『空の飛び方』" },
+      { title: "ラズベリー", source: "5th『空の飛び方』" },
+      { title: "ヘチマの花", source: "5th『空の飛び方』" },
+      { title: "ベビーフェイス", source: "5th『空の飛び方』" },
+      { title: "青い車", source: "5th『空の飛び方』" },
+      { title: "サンシャイン", source: "5th『空の飛び方』" },
+
+      // 6th Album『ハチミツ』(1995)
+      { title: "ハチミツ", source: "6th『ハチミツ』" },
+      { title: "涙がキラリ☆", source: "6th『ハチミツ』" },
+      { title: "歩き出せ、クローバー", source: "6th『ハチミツ』" },
+      { title: "ルナルナ", source: "6th『ハチミツ』" },
+      { title: "愛のことば", source: "6th『ハチミツ』" },
+      { title: "トンガリ'95", source: "6th『ハチミツ』" },
+      { title: "あじさい通り", source: "6th『ハチミツ』" },
+      { title: "ロビンソン", source: "6th『ハチミツ』" },
+      { title: "Y", source: "6th『ハチミツ』" },
+      { title: "グラスホッパー", source: "6th『ハチミツ』" },
+      { title: "君と暮らせたら", source: "6th『ハチミツ』" },
+
+      // 7th Album『インディゴ地平線』(1996)
+      { title: "花泥棒", source: "7th『インディゴ地平線』" },
+      { title: "初恋クレイジー", source: "7th『インディゴ地平線』" },
+      { title: "インディゴ地平線", source: "7th『インディゴ地平線』" },
+      { title: "渚", source: "7th『インディゴ地平線』" },
+      { title: "ハヤテ", source: "7th『インディゴ地平線』" },
+      { title: "ナナへの気持ち", source: "7th『インディゴ地平線』" },
+      { title: "虹を越えて", source: "7th『インディゴ地平線』" },
+      { title: "バニーガール", source: "7th『インディゴ地平線』" },
+      { title: "ほうき星", source: "7th『インディゴ地平線』" },
+      { title: "マフラーマン", source: "7th『インディゴ地平線』" },
+      { title: "夕陽が笑う、君も笑う", source: "7th『インディゴ地平線』" },
+      { title: "チェリー", source: "7th『インディゴ地平線』" },
+
+      // 8th Album『フェイクファー』(1998)
+      { title: "エトランゼ", source: "8th『フェイクファー』" },
+      { title: "センチメンタル", source: "8th『フェイクファー』" },
+      { title: "冷たい頬", source: "8th『フェイクファー』" },
+      { title: "運命の人", source: "8th『フェイクファー』" },
+      { title: "仲良し", source: "8th『フェイクファー』" },
+      { title: "楓", source: "8th『フェイクファー』" },
+      { title: "スーパーノヴァ", source: "8th『フェイクファー』" },
+      { title: "ただ春を待つ", source: "8th『フェイクファー』" },
+      { title: "謝々！", source: "8th『フェイクファー』" },
+      { title: "ウィリー", source: "8th『フェイクファー』" },
+      { title: "スカーレット", source: "8th『フェイクファー』" },
+      { title: "フェイクファー", source: "8th『フェイクファー』" },
+
+      // Special Album『花鳥風月』『花鳥風月+』(1999 / 2021)
+      { title: "流れ星", source: "Special『花鳥風月+』" },
+      { title: "愛のしるし", source: "Special『花鳥風月+』" },
+      { title: "スピカ", source: "Special『花鳥風月+』" },
+      { title: "旅人", source: "Special『花鳥風月+』" },
+      { title: "俺のすべて", source: "Special『花鳥風月+』" },
+      { title: "猫になりたい", source: "Special『花鳥風月+』" },
+      { title: "心の底から", source: "Special『花鳥風月+』" },
+      { title: "マーメイド", source: "Special『花鳥風月+』" },
+      { title: "コスモス", source: "Special『花鳥風月+』" },
+      { title: "野生のチューリップ", source: "Special『花鳥風月+』" },
+      { title: "鳥になって", source: "Special『花鳥風月+』" },
+      { title: "おっぱい", source: "Special『花鳥風月+』" },
+      { title: "トゲトゲの木", source: "Special『花鳥風月+』" },
+
+      // 9th Album『ハヤブサ』(2000)
+      { title: "今", source: "9th『ハヤブサ』" },
+      { title: "放浪カモメはどこまでも", source: "9th『ハヤブサ』" },
+      { title: "いろは", source: "9th『ハヤブサ』" },
+      { title: "さらばユニヴァース", source: "9th『ハヤブサ』" },
+      { title: "甘い手", source: "9th『ハヤブサ』" },
+      { title: "Holiday", source: "9th『ハヤブサ』" },
+      { title: "8823", source: "9th『ハヤブサ』" },
+      { title: "宇宙虫", source: "9th『ハヤブサ』" },
+      { title: "ハートが帰らない", source: "9th『ハヤブサ』" },
+      { title: "ホタル", source: "9th『ハヤブサ』" },
+      { title: "メモリーズ・カスタム", source: "9th『ハヤブサ』" },
+      { title: "俺の赤い星", source: "9th『ハヤブサ』" },
+      { title: "ジュテーム？", source: "9th『ハヤブサ』" },
+      { title: "アカネ", source: "9th『ハヤブサ』" },
+
+      // 10th Album『三日月ロック』(2002)
+      { title: "夜を駆ける", source: "10th『三日月ロック』" },
+      { title: "水色の街", source: "10th『三日月ロック』" },
+      { title: "さわって・変わって", source: "10th『三日月ロック』" },
+      { title: "ミカンズのテーマ", source: "10th『三日月ロック』" },
+      { title: "ババロア", source: "10th『三日月ロック』" },
+      { title: "ローテク・ロマンティカ", source: "10th『三日月ロック』" },
+      { title: "ハネモノ", source: "10th『三日月ロック』" },
+      { title: "海を見に行こう", source: "10th『三日月ロック』" },
+      { title: "エスカルゴ", source: "10th『三日月ロック』" },
+      { title: "遥か", source: "10th『三日月ロック』" },
+      { title: "ガーベラ", source: "10th『三日月ロック』" },
+      { title: "旅の途中", source: "10th『三日月ロック』" },
+      { title: "けもの道", source: "10th『三日月ロック』" },
+
+      // Special Album『色色衣』(2004)
+      { title: "スターゲイザー", source: "Special『色色衣』" },
+      { title: "ハイファイ・ローファイ", source: "Special『色色衣』" },
+      { title: "稲穂", source: "Special『色色衣』" },
+      { title: "魚", source: "Special『色色衣』" },
+      { title: "ムーンライト", source: "Special『色色衣』" },
+      { title: "メモリーズ", source: "Special『色色衣』" },
+      { title: "青春生き残りゲーム", source: "Special『色色衣』" },
+      { title: "SUGINAMI MELODY", source: "Special『色色衣』" },
+      { title: "船乗り", source: "Special『色色衣』" },
+      { title: "雪風", source: "Special『色色衣』" },
+      { title: "大宮サンセット", source: "Special『色色衣』" },
+      { title: "夢追い虫", source: "Special『色色衣』" },
+      { title: "僕はジェット", source: "Special『色色衣』" },
+      { title: "孫悟空", source: "Special『色色衣』" },
+
+      // 11th Album『スーベニア』(2005)
+      { title: "春の歌", source: "11th『スーベニア』" },
+      { title: "ありふれた人生", source: "11th『スーベニア』" },
+      { title: "甘ったれクリーチャー", source: "11th『スーベニア』" },
+      { title: "優しくなりたいな", source: "11th『スーベニア』" },
+      { title: "ナンプラー日和", source: "11th『スーベニア』" },
+      { title: "正夢", source: "11th『スーベニア』" },
+      { title: "ほのほ", source: "11th『スーベニア』" },
+      { title: "ワタリ", source: "11th『スーベニア』" },
+      { title: "恋のはじまり", source: "11th『スーベニア』" },
+      { title: "自転車", source: "11th『スーベニア』" },
+      { title: "テイタム・オニール", source: "11th『スーベニア』" },
+      { title: "会いに行くよ", source: "11th『スーベニア』" },
+      { title: "みそか", source: "11th『スーベニア』" },
+
+      // 12th Album『さざなみCD』(2007)
+      { title: "僕のギター", source: "12th『さざなみCD』" },
+      { title: "桃", source: "12th『さざなみCD』" },
+      { title: "群青", source: "12th『さざなみCD』" },
+      { title: "Na・de・Na・de ボーイ", source: "12th『さざなみCD』" },
+      { title: "ルキンフォー", source: "12th『さざなみCD』" },
+      { title: "不思議", source: "12th『さざなみCD』" },
+      { title: "点と点", source: "12th『さざなみCD』" },
+      { title: "P", source: "12th『さざなみCD』" },
+      { title: "魔法のコトバ", source: "12th『さざなみCD』" },
+      { title: "トビウオ", source: "12th『さざなみCD』" },
+      { title: "ネズミの進化", source: "12th『さざなみCD』" },
+      { title: "漣", source: "12th『さざなみCD』" },
+      { title: "砂漠の花", source: "12th『さざなみCD』" },
+
+      // 13th Album『とげまる』(2010)
+      { title: "ビギナー", source: "13th『とげまる』" },
+      { title: "探検隊", source: "13th『とげまる』" },
+      { title: "シロクマ", source: "13th『とげまる』" },
+      { title: "恋する凡人", source: "13th『とげまる』" },
+      { title: "つぐみ", source: "13th『とげまる』" },
+      { title: "新月", source: "13th『とげまる』" },
+      { title: "花の写真", source: "13th『とげまる』" },
+      { title: "幻のドラゴン", source: "13th『とげまる』" },
+      { title: "TRABANT", source: "13th『とげまる』" },
+      { title: "聞かせてよ", source: "13th『とげまる』" },
+      { title: "えにし", source: "13th『とげまる』" },
+      { title: "若葉", source: "13th『とげまる』" },
+      { title: "どんどどん", source: "13th『とげまる』" },
+      { title: "君は太陽", source: "13th『とげまる』" },
+
+      // Special Album『おるたな』(2012)
+      { title: "リコリス", source: "Special『おるたな』" },
+      { title: "さすらい", source: "Special『おるたな』" },
+      { title: "ラクガキ王国", source: "Special『おるたな』" },
+      { title: "14番目の月", source: "Special『おるたな』" },
+      { title: "三日月ロック その3", source: "Special『おるたな』" },
+      { title: "タイム・トラベル", source: "Special『おるたな』" },
+      { title: "夕焼け", source: "Special『おるたな』" },
+      { title: "まもるさん", source: "Special『おるたな』" },
+      { title: "初恋に捧ぐ", source: "Special『おるたな』" },
+      { title: "テクテク", source: "Special『おるたな』" },
+      { title: "シャララ", source: "Special『おるたな』" },
+      { title: "12月の雨の日", source: "Special『おるたな』" },
+      { title: "さよなら大好きな人", source: "Special『おるたな』" },
+      { title: "オケラ", source: "Special『おるたな』" },
+
+      // 14th Album『小さな生き物』(2013)
+      { title: "未来コオロギ", source: "14th『小さな生き物』" },
+      { title: "小さな生き物", source: "14th『小さな生き物』" },
+      { title: "りありてぃ", source: "14th『小さな生き物』" },
+      { title: "ランプ", source: "14th『小さな生き物』" },
+      { title: "オパビニア", source: "14th『小さな生き物』" },
+      { title: "さらさら", source: "14th『小さな生き物』" },
+      { title: "野生のポルカ", source: "14th『小さな生き物』" },
+      { title: "scat", source: "14th『小さな生き物』" },
+      { title: "エンドロールには早すぎる", source: "14th『小さな生き物』" },
+      { title: "遠吠えシャッフル", source: "14th『小さな生き物』" },
+      { title: "スワン", source: "14th『小さな生き物』" },
+      { title: "潮騒ちゃん", source: "14th『小さな生き物』" },
+      { title: "僕はきっと旅に出る", source: "14th『小さな生き物』" },
+      { title: "エスペランサ", source: "14th『小さな生き物』" },
+
+      // 15th Album『醒めない』(2016)
+      { title: "醒めない", source: "15th『醒めない』" },
+      { title: "みなと", source: "15th『醒めない』" },
+      { title: "子グマ！子グマ！", source: "15th『醒めない』" },
+      { title: "コメット", source: "15th『醒めない』" },
+      { title: "ナサケモノ", source: "15th『醒めない』" },
+      { title: "グリーン", source: "15th『醒めない』" },
+      { title: "SJ", source: "15th『醒めない』" },
+      { title: "ハチの針", source: "15th『醒めない』" },
+      { title: "モニャモニャ", source: "15th『醒めない』" },
+      { title: "ガラクタ", source: "15th『醒めない』" },
+      { title: "ヒビスクス", source: "15th『醒めない』" },
+      { title: "ブチ", source: "15th『醒めない』" },
+      { title: "雪風（醒めない ver.）", source: "15th『醒めない』" },
+      { title: "こんにちは", source: "15th『醒めない』" },
+
+      // 16th Album『見っけ』(2019)
+      { title: "見っけ", source: "16th『見っけ』" },
+      { title: "優しいあの子", source: "16th『見っけ』" },
+      { title: "ありがとさん", source: "16th『見っけ』" },
+      { title: "ラジオデイズ", source: "16th『見っけ』" },
+      { title: "花と虫", source: "16th『見っけ』" },
+      { title: "ブービー", source: "16th『見っけ』" },
+      { title: "快速", source: "16th『見っけ』" },
+      { title: "YM71D", source: "16th『見っけ』" },
+      { title: "はぐれ狼", source: "16th『見っけ』" },
+      { title: "まがった僕のしっぽ", source: "16th『見っけ』" },
+      { title: "初夏の日", source: "16th『見っけ』" },
+      { title: "ヤマブキ", source: "16th『見っけ』" },
+      { title: "ブランケット", source: "16th『見っけ』" },
+
+      // 17th Album『ひみつスタジオ』(2023)
+      { title: "i-O（修理のうた）", source: "17th『ひみつスタジオ』" },
+      { title: "跳べ", source: "17th『ひみつスタジオ』" },
+      { title: "大好物", source: "17th『ひみつスタジオ』" },
+      { title: "美しい鰭", source: "17th『ひみつスタジオ』" },
+      { title: "さびしくなかった", source: "17th『ひみつスタジオ』" },
+      { title: "オバケのロックバンド", source: "17th『ひみつスタジオ』" },
+      { title: "手鞠", source: "17th『ひみつスタジオ』" },
+      { title: "未来未来", source: "17th『ひみつスタジオ』" },
+      { title: "紫の夜を越えて", source: "17th『ひみつスタジオ』" },
+      { title: "Sandie", source: "17th『ひみつスタジオ』" },
+      { title: "ときめきpart1", source: "17th『ひみつスタジオ』" },
+      { title: "めぐりめぐって", source: "17th『ひみつスタジオ』" },
+      { title: "讃歌", source: "17th『ひみつスタジオ』" },
+
+      // シングル収録曲・カップリング・ベスト盤・配信限定曲など
+      { title: "ヘビーメロウ", source: "Best『CYCLE HIT 2006-2017』" },
+      { title: "歌ウサギ", source: "Best『CYCLE HIT 2006-2017』" },
+      { title: "1987→", source: "Best『CYCLE HIT 2006-2017』" },
+      { title: "猫ちぐら", source: "配信シングル（2020）" },
+      { title: "灯を護る", source: "配信シングル（2025）" },
+      { title: "見知らぬ糸", source: "配信シングル（2026）" },
+      { title: "あかさたな", source: "Single「美しい鰭」c/w" },
+      { title: "祈りはきっと", source: "Single「美しい鰭」c/w" },
+      { title: "YM71D（demo）", source: "Single「優しいあの子」関連" },
+      { title: "悪役", source: "Single「優しいあの子」c/w" },
+      { title: "ガラクタ（Single ver.）", source: "Single「みなと」c/w" },
+      { title: "愛のしるし（Live）", source: "Single「愛のしるし」関連" },
+      { title: "ワンツー！ワンツー！", source: "Single「さらさら」c/w" },
+      { title: "シロクマ（Live）", source: "Single「シロクマ」関連" },
+      { title: "めざめ", source: "Single「つぐみ」c/w" },
+      { title: "花と虫（Demo）", source: "Single関連" },
+      { title: "あかりちゃん", source: "Single「君は太陽」c/w" },
+      { title: "スワン（Single ver.）", source: "Single「若葉」c/w" },
+      { title: "まもるさん（Single ver.）", source: "Single「群青」c/w" },
+      { title: "ラクガキ王国（Single ver.）", source: "Single「ルキンフォー」c/w" },
+      { title: "シャララ（Single ver.）", source: "Single「魔法のコトバ」c/w" },
+      { title: "テクテク（Single ver.）", source: "Single「春の歌」c/w" },
+      { title: "リコリス（Single ver.）", source: "Single「正夢」c/w" },
+      { title: "三日月ロック その3（Single ver.）", source: "Single「ハネモノ」c/w" },
+      { title: "ガーベラ（Single ver.）", source: "Single「水色の街」c/w" },
+      { title: "稲穂（Single ver.）", source: "Single「さわって・変わって」c/w" },
+      { title: "孫悟空（Single ver.）", source: "Single「夢追い虫」c/w" },
+      { title: "遥か（Single Mix）", source: "Single「遥か」" },
+      { title: "船乗り（Single ver.）", source: "Single「遥か」c/w" },
+      { title: "ムーンライト（Single ver.）", source: "Single「ホタル」c/w" },
+      { title: "メモリーズ（Single ver.）", source: "Single「メモリーズ」" },
+      { title: "青春生き残りゲーム（Single ver.）", source: "Single「放浪カモメはどこまでも」c/w" },
+      { title: "エトランゼ（Tanaka Mix）", source: "Single「楓 / スピカ」c/w" },
+      { title: "仲良し（Single ver.）", source: "Single「運命の人」c/w" },
+      { title: "謝々！（Single ver.）", source: "Single「冷たい頬」c/w" },
+      { title: "うめぼし（Live）", source: "Single「スカーレット」c/w" },
+      { title: "バニーガール（Single ver.）", source: "Single「チェリー」c/w" },
+      { title: "旅人（Single ver.）", source: "Single「渚」c/w" },
+      { title: "トゲトゲの木（Single ver.）", source: "Single「涙がキラリ☆」c/w" },
+      { title: "俺のすべて（Single ver.）", source: "Single「ロビンソン」c/w" },
+      { title: "恋は夕暮れ（Single ver.）", source: "Single「スパイダー」c/w" },
+      { title: "猫になりたい（Single ver.）", source: "Single「青い車」c/w" },
+      { title: "ベビーフェイス（Single ver.）", source: "Single「空も飛べるはず」c/w" },
+      { title: "夏が終わる（Single ver.）", source: "Single「君が思い出になる前に」c/w" },
+      { title: "心の底から（Single ver.）", source: "Single「裸のままで」c/w" },
+      { title: "マーメイド（Single ver.）", source: "Single「日なたの窓に憧れて」c/w" },
+      { title: "おっぱい（Single ver.）", source: "Single「魔女旅に出る」c/w" },
+      { title: "ビー玉（Single ver.）", source: "Single「ヒバリのこころ」c/w" },
+      { title: "死にもの狂いのカゲロウを見ていた", source: "未アルバム化・初期ライブ楽曲" },
+      { title: "晴れの日はプカプカプー", source: "未アルバム化・初期ライブ楽曲" },
+      { title: "クモクモが笑ってる", source: "未アルバム化・初期ライブ楽曲" },
+      { title: "マシュマロ", source: "未アルバム化・初期ライブ楽曲" },
+      { title: "コンコルド", source: "未アルバム化・初期ライブ楽曲" },
+      { title: "ウサギのバイク（Demo）", source: "初期デモアーカイブ" },
+      { title: "僕の天使マリ（Single ver.）", source: "Single「惑星のかけら」c/w" }
+    ];
+
+    // 重複タイトルを除外して一意のカタログ配列を構築
+    const UNIQUE_CATALOG = (() => {
+      const seen = new Set();
+      return SPITZ_SONGS.filter(song => {
+        if (seen.has(song.title)) return false;
+        seen.add(song.title);
+        return true;
+      });
+    })();
+
+    // 現在表示中の10曲プレイリスト
+    let currentPlaylist = [];
+    // トーストタイマーID
+    let toastTimer = null;
+
+    /**
+     * HTMLエスケープ処理（XSS対策）
+     */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * Fisher-Yates アルゴリズムで重複なしに指定曲数をランダム抽出する
+     */
+    function pickRandomSongs(count) {
+      const pool = [...UNIQUE_CATALOG];
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, count);
+    }
+
+    /**
+     * 新しい10曲プレイリストを生成して描画する
+     */
+    function generatePlaylist() {
+      currentPlaylist = pickRandomSongs(10);
+      renderPlaylist();
+      updateTimestamp();
+      resetCopyButton();
+    }
+
+    /**
+     * 指定インデックスの1曲だけを、現在の10曲に含まれない別の曲に入れ替える（リロール）
+     * @param {number} index - 入れ替える曲のインデックス（0〜9）
+     */
+    function rerollTrack(index) {
+      const currentTitles = new Set(currentPlaylist.map(s => s.title));
+      const candidates = UNIQUE_CATALOG.filter(s => !currentTitles.has(s.title));
+
+      if (candidates.length === 0) return;
+
+      const randomSong = candidates[Math.floor(Math.random() * candidates.length)];
+      currentPlaylist[index] = randomSong;
+
+      renderPlaylist(index);
+      resetCopyButton();
+    }
+
+    /**
+     * プレイリストのHTML描画とX投稿URLの更新を行う
+     * @param {number|null} highlightedIndex - 直前にリロールされた行インデックス（強調演出用）
+     */
+    function renderPlaylist(highlightedIndex = null) {
+      const container = document.getElementById('trackListContainer');
+
+      container.innerHTML = currentPlaylist.map((song, idx) => {
+        const trackNum = String(idx + 1).padStart(2, '0');
+        const highlightClass = highlightedIndex === idx
+          ? 'bg-sky-50/90'
+          : 'hover:bg-sky-50/40';
+
+        // YouTube Music & Spotify のダイレクト検索URLを生成
+        const encodedQuery = encodeURIComponent(`スピッツ ${song.title}`);
+        const ytMusicUrl = `https://music.youtube.com/search?q=${encodedQuery}`;
+        const spotifyUrl = `https://open.spotify.com/search/${encodedQuery}`;
+
+        return `
+          <div class="group px-4 sm:px-7 py-4 flex items-start sm:items-center justify-between gap-3 transition-colors duration-200 ${highlightClass}">
+            <!-- 左側：トラック番号 + 曲名 + アルバム情報 + 配信リンク -->
+            <div class="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
+              <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-sky-100 to-emerald-100 text-sky-800 font-display font-extrabold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-sky-200/70 mt-0.5 sm:mt-0">
+                ${trackNum}
+              </span>
+
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-800 leading-snug break-words">
+                  ${escapeHtml(song.title)}
+                </h3>
+
+                <!-- 収録情報 & YouTube Music / Spotify リンクバッジ -->
+                <div class="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200/80 text-[11px] font-medium max-w-full truncate">
+                    ${escapeHtml(song.source)}
+                  </span>
+
+                  <!-- YouTube Music リンク -->
+                  <a
+                    href="${ytMusicUrl}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="YouTube Musicで「${escapeHtml(song.title)}」を検索"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 hover:border-rose-600 text-[11px] font-display font-bold transition-colors"
+                  >
+                    <svg class="w-3 h-3 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                    </svg>
+                    <span>YT Music</span>
+                  </a>
+
+                  <!-- Spotify リンク -->
+                  <a
+                    href="${spotifyUrl}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Spotifyで「${escapeHtml(song.title)}」を検索"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 text-[11px] font-display font-bold transition-colors"
+                  >
+                    <svg class="w-3 h-3 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.469-.077-.336.132-.67.469-.746 3.809-.87 7.076-.496 9.713 1.115.293.18.386.563.207.856zm1.224-2.723c-.226.367-.706.482-1.072.257-2.687-1.652-6.785-2.131-9.965-1.166-.413.127-.848-.106-.973-.517-.125-.413.108-.848.52-.973 3.632-1.102 8.147-.568 11.234 1.328.366.226.48.707.256 1.071zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.493.15-1.016-.128-1.166-.62-.149-.493.129-1.016.621-1.166 3.532-1.073 9.404-.865 13.115 1.338.445.264.59.837.327 1.282-.264.443-.838.59-1.282.322z"/>
+                    </svg>
+                    <span>Spotify</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右側：1曲だけ入れ替え（リロール）ボタン -->
+            <button
+              type="button"
+              onclick="rerollTrack(${idx})"
+              title="この曲だけ別の曲に入れ替える"
+              aria-label="${trackNum}曲目「${escapeHtml(song.title)}」を入れ替える"
+              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white hover:bg-sky-50 text-slate-500 hover:text-sky-700 border border-slate-200 hover:border-sky-300 text-xs font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <span class="hidden sm:inline">入れ替え</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      updateTweetLink();
+    }
+
+    /**
+     * プレイリストのテキスト形式を生成する（01. 曲名 / 02. 曲名 ...）
+     */
+    function buildSetlistText() {
+      return currentPlaylist
+        .map((song, idx) => `${String(idx + 1).padStart(2, '0')}. ${song.title}`)
+        .join('\n');
+    }
+
+    /**
+     * X（Twitter）ポストボタンのURLを更新する
+     */
+    function updateTweetLink() {
+      const tweetBtn = document.getElementById('tweetBtn');
+      const lines = currentPlaylist
+        .map((song, idx) => `${idx + 1}. ${song.title}`)
+        .join('\n');
+
+      const postBody =
+        `【今日のスピッツ10曲プレイリスト】🎵\n` +
+        `${lines}\n\n` +
+        `#スピッツ #今日のスピッツ10曲\n`;
+
+      const pageUrl = window.location.href;
+      tweetBtn.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(postBody)}&url=${encodeURIComponent(pageUrl)}`;
+    }
+
+    /**
+     * セットリストをクリップボードにコピーする（iFrame環境でも動作する execCommand 使用）
+     */
+    function copySetlist() {
+      const textToCopy = `【スピッツ ランダム10曲プレイリスト】\n${buildSetlistText()}`;
+
+      // 一時テキストエリアを作成してコピー実行
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      let success = false;
+      try {
+        success = document.execCommand('copy');
+      } catch (err) {
+        success = false;
+      }
+      document.body.removeChild(textarea);
+
+      if (success) {
+        const copyBtn = document.getElementById('copyBtn');
+        const copyBtnText = document.getElementById('copyBtnText');
+
+        copyBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+        copyBtn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+        copyBtnText.textContent = 'コピーしました！';
+
+        showToast('セットリストをコピーしました！');
+      } else {
+        showToast('コピーに失敗しました。手動で選択してコピーしてください。');
+      }
+    }
+
+    /**
+     * コピーボタンの表示を初期状態に戻す
+     */
+    function resetCopyButton() {
+      const copyBtn = document.getElementById('copyBtn');
+      const copyBtnText = document.getElementById('copyBtnText');
+
+      copyBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+      copyBtn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
+      copyBtnText.textContent = 'セットリストをコピー';
+    }
+
+    /**
+     * 画面下部にトーストメッセージを表示する
+     */
+    function showToast(message) {
+      const toast = document.getElementById('toastNotification');
+      const toastMessage = document.getElementById('toastMessage');
+      toastMessage.textContent = message;
+
+      toast.classList.remove('opacity-0', 'translate-y-3');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-3');
+      }, 2400);
+    }
+
+    /**
+     * 生成時刻バッジを更新する
+     */
+    function updateTimestamp() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('generatedTimestamp').textContent = `CREATED AT ${hh}:${mm}:${ss}`;
+    }
+
+    // 初期起動処理
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('totalSongCount').textContent = UNIQUE_CATALOG.length;
+      generatePlaylist();
+    });
+  </script>
+</body>
+</html>
